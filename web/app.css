@@ -151,3 +151,38 @@ h1 { font-size:clamp(32px,3vw,43px); }
 .map-district-labels { pointer-events:none; }
 .map-district-labels text { text-anchor:middle; fill:#254c41; font-size:25px; font-weight:650; paint-order:stroke; stroke:#f8fbf0; stroke-width:4px; stroke-linejoin:round; }
 .map-district-labels .map-score { font-size:36px; font-weight:500; stroke-width:3px; }
+
+/* Compare a saved plan with the currently calculated plan. */
+.scenario-actions { display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
+.report-link+.report-link { margin-left:20px; }
+.comparison-panel { margin-top:24px; scroll-margin-top:20px; }
+.comparison-panel[hidden],.comparison-panel [hidden] { display:none; }
+.scenario-storage-note { font-size:12px; line-height:1.65; color:var(--muted); }
+.comparison-summary { padding:16px 20px; border-left:3px solid #4b8263; background:#edf3e7; font-size:16px; line-height:1.6; }
+.scenario-cards { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:22px 0; }
+.scenario-card { padding:22px; border:1px solid #d8dfd1; border-radius:12px; background:#f7f8f1; }
+.scenario-current { background:#edf3e9; border-color:#bccfbb; }
+.scenario-card h3 { font-size:30px; font-weight:500; margin:9px 0; }
+.scenario-card .section-note { font-size:12px; }
+.scenario-card ul { padding-left:19px; margin:14px 0 0; }
+.scenario-card li { padding:4px 0; font-size:13px; line-height:1.55; }
+.comparison-table-wrap { overflow-x:auto; border:1px solid #d8dfd1; border-radius:10px; }
+.comparison-table { border-collapse:collapse; width:100%; font-size:14px; font-variant-numeric:tabular-nums; }
+.comparison-table caption { text-align:left; padding:16px 18px; font-size:12px; color:var(--muted); background:#f7f8f1; }
+.comparison-table th,.comparison-table td { padding:13px 18px; border-bottom:1px solid #e4e8dd; text-align:right; white-space:nowrap; }
+.comparison-table th:first-child { text-align:left; white-space:normal; min-width:190px; }
+.comparison-table thead th { background:#edf2e6; font-size:12px; }
+.comparison-table tbody th { font-weight:500; }
+.comparison-table tbody tr:first-child { font-size:17px; background:#f0f5e9; }
+.comparison-table tbody tr:nth-child(6) { border-top:2px solid #b9cbb4; }
+.comparison-table tbody tr:last-child>* { border-bottom:0; }
+.comparison-better { color:#216448; font-weight:650; }
+.comparison-worse { color:#a13a31; font-weight:650; }
+@media (max-width:700px) {
+  .scenario-cards { grid-template-columns:1fr; }
+  .scenario-actions { width:100%; justify-content:flex-start; }
+  .scenario-card { padding:17px; }
+  .comparison-table th,.comparison-table td { padding:12px; }
+  .comparison-panel .section-heading { flex-wrap:wrap; }
+  .report-link+.report-link { margin-left:0; display:block; }
+}

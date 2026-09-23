@@ -93,11 +93,23 @@
         <div class="selection-counter"><strong id="selection-count">0 / 5</strong><span>решений</span></div>
       </div>
       <div id="measures" class="measures"></div>
-      <div class="action-bar"><div><strong id="selection-summary">Выбрано 0 из 5</strong><p id="selection-hint">Выберите мероприятия, чтобы рассчитать изменения.</p></div><button id="evaluate" class="button primary" disabled>Рассчитать сценарий <span aria-hidden="true">↗</span></button></div>
+      <div class="action-bar"><div><strong id="selection-summary">Выбрано 0 из 5</strong><p id="selection-hint">Выберите мероприятия, чтобы рассчитать изменения.</p></div><div class="scenario-actions"><button id="evaluate" class="button primary" disabled>Рассчитать сценарий <span aria-hidden="true">↗</span></button><button id="save-scenario" class="button secondary" disabled>Сохранить как А</button></div></div>
       <div id="scenario-status" class="notice" role="status" aria-live="polite" hidden></div>
       <a id="report-link" class="report-link" href="#conclusion" hidden>Читать заключение о последствиях ↓</a>
+      <a id="compare-link" class="report-link" href="#comparison" hidden>Сравнить с вариантом А ↓</a>
     </section>
     </div>
+    <section id="comparison" class="panel comparison-panel" aria-labelledby="comparison-title" hidden>
+      <div class="section-heading"><div><p class="eyebrow">А / Б · СРАВНЕНИЕ РЕШЕНИЙ</p><h2 id="comparison-title">Какой план подходит городу?</h2></div><div class="toolbar"><button id="restore-scenario" class="button secondary" disabled>Восстановить А</button><button id="retry-scenario" class="button quiet" hidden>Повторить проверку А</button></div></div>
+      <p class="section-note">Сохраните рассчитанный план как А, измените решения и рассчитайте Б. Сравните общий балл и последствия для каждого района.</p>
+      <p id="saved-scenario-status" class="scenario-storage-note" role="status" aria-live="polite"></p>
+      <p id="comparison-summary" class="comparison-summary" role="status" aria-live="polite"></p>
+      <div id="comparison-content" hidden>
+        <div class="scenario-cards"><section class="scenario-card"><p class="eyebrow">ВАРИАНТ А · СОХРАНЁННЫЙ</p><h3 id="scenario-a-score">—</h3><p id="scenario-a-date" class="section-note"></p><ul id="scenario-a-decisions"></ul></section><section class="scenario-card scenario-current"><p class="eyebrow">ВАРИАНТ Б · ТЕКУЩИЙ</p><h3 id="scenario-b-score">—</h3><p id="scenario-b-state" class="section-note"></p><ul id="scenario-b-decisions"></ul></section></div>
+        <div class="comparison-table-wrap" role="region" aria-label="Сравнение показателей вариантов А и Б" tabindex="0"><table class="comparison-table"><caption>Сравнение рассчитанных результатов. Разница — Б минус А.</caption><thead><tr><th scope="col">Показатель</th><th scope="col">А</th><th scope="col">Б</th><th scope="col">Разница</th></tr></thead><tbody id="comparison-rows"></tbody></table></div>
+        <p class="disclaimer">Зелёный — улучшение показателя, красный — ухудшение. Расходы и остаток показаны нейтрально. Сравнение относится только к этим двум планам в учебной модели.</p>
+      </div>
+    </section>
     <section id="conclusion" class="panel conclusion-panel" aria-labelledby="conclusion-title" hidden>
       <div class="section-heading"><div><p class="eyebrow">03 / ПОСЛЕДСТВИЯ РЕШЕНИЙ</p><h2 id="conclusion-title">Что изменят ваши решения</h2></div><span class="pill">По данным модели</span></div>
       <p id="conclusion-summary" class="conclusion-summary"></p>

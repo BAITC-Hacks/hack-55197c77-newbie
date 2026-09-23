@@ -13,6 +13,8 @@ const profiles = {'Есиль':'Сильные городские сервисы
 let data, initial, example, result = null, selected = 'Нура', view = 'before';
 let choices = new Map(), revision = 0, pending = false;
 let aiResult = null, aiPending = false, aiMessage = 'Проверяем настройки AI…';
+const savedScenarioKey = 'akim.scenario-a.v1';
+let savedScenario = null, savedResult = null, savedPending = false, savedRevision = 0, savedMessage = '';
 const fmt = (n) => n.toLocaleString('ru-RU',{maximumFractionDigits:2});
 function element(tag, className, text) { const node=document.createElement(tag); if(className)node.className=className; if(text!==undefined)node.textContent=text; return node; }
 function current() { return view === 'after' && result ? result : initial; }
@@ -52,6 +54,120 @@ function renderSummary() {
   $('show-before').setAttribute('aria-pressed',String(view==='before'));
   $('show-after').setAttribute('aria-pressed',String(view==='after'));
   updateMeasureAvailability();
+  renderComparison();
+}
+function copyDecisions(decisions) { return decisions.map(decision=>({...decision})); }
+function differenceText(value) {
+  if(Math.abs(value)<1e-9)return '0';
+  return `${value>0?'+':'−'}${Math.abs(value)<.005?'<0,01':fmt(Math.abs(value))}`;
+}
+function renderDecisionList(id, decisions) {
+  const list=$(id);list.replaceChildren();
+  decisions.forEach(decision=>{
+    const measure=data.measures.find(item=>item.id===decision.measure);
+    list.append(element('li','',`${measure.id} · ${measure.name} — ${measure.scope==='district'?decision.district:'весь город'}`));
+  });
+}
+function renderComparison() {
+  $('save-scenario').disabled=!result||pending;
+  $('save-scenario').textContent=savedScenario?'Заменить вариант А':'Сохранить как А';
+  $('save-scenario').title=result?'Сохранить текущие решения как вариант А':'Сначала рассчитайте допустимый сценарий';
+  $('restore-scenario').disabled=!savedResult||pending||savedPending;
+  $('retry-scenario').hidden=!savedScenario||Boolean(savedResult)||savedPending;
+  $('compare-link').hidden=!savedScenario;
+  $('comparison').hidden=!savedScenario&&!result&&!savedMessage;
+  $('saved-scenario-status').textContent=savedPending?'Проверяем сохранённый вариант А по текущим правилам…':savedMessage;
+  $('comparison-content').hidden=!savedResult;
+  if(!savedResult) {
+    $('comparison-summary').textContent=savedScenario?'Результаты появятся после проверки сохранённых решений.':'Нажмите «Сохранить как А» рядом с кнопкой расчёта, чтобы зафиксировать первый вариант.';
+    return;
+  }
+  $('scenario-a-score').textContent=`${fmt(savedResult.score)} балла`;
+  $('scenario-a-date').textContent=`Сохранён ${new Date(savedScenario.savedAt).toLocaleString('ru-RU')}`;
+  renderDecisionList('scenario-a-decisions',savedScenario.decisions);
+  renderDecisionList('scenario-b-decisions',[...choices.values()]);
+  $('scenario-b-score').textContent=result?`${fmt(result.score)} балла`:'Ожидает расчёта';
+  $('scenario-b-state').textContent=result?'Результат текущих пяти решений':'Изменения ещё не рассчитаны. Вариант А сохранён.';
+  const delta=result?result.score-savedResult.score:0;
+  $('comparison-summary').textContent=!result?'Измените решения и нажмите «Рассчитать сценарий»: здесь появится сравнение с А.':Math.abs(delta)<1e-9?'Score вариантов А и Б совпадает. Сравните распределение пользы по районам.':`По формуле Score вариант ${delta>0?'Б':'А'} выше на ${Math.abs(delta)<.005?'менее 0,01':fmt(Math.abs(delta))} балла. Ниже видно, каким районам стало лучше или хуже в Б.`;
+  const rows=[
+    ['Балл города · Score',savedResult.score,result?.score,1],
+    ['Критические показатели · меньше лучше',savedResult.critical_count,result?.critical_count,-1],
+    ['Потрачено, усл. ед.',savedResult.cost,result?.cost,0],
+    ['Остаток бюджета, усл. ед.',savedResult.remaining_budget,result?.remaining_budget,0],
+    ['Минимальная оценка района',savedResult.weakest_district_score,result?.weakest_district_score,1],
+    ...data.districts.map(d=>[d.name,savedResult.district_scores[d.name],result?.district_scores[d.name],1])
+  ];
+  $('comparison-rows').replaceChildren();
+  rows.forEach(([label,a,b,direction])=>{
+    const row=element('tr'), heading=element('th','',label);heading.scope='row';
+    const difference=b===undefined?null:b-a;
+    const tone=difference===null||Math.abs(difference)<1e-9||!direction?'':difference*direction>0?'comparison-better':'comparison-worse';
+    row.append(heading,element('td','',fmt(a)),element('td','',b===undefined?'—':fmt(b)),element('td',tone,difference===null?'—':differenceText(difference)));
+    $('comparison-rows').append(row);
+  });
+}
+function saveScenario() {
+  if(!result||pending)return;
+  savedRevision++;savedPending=false;
+  savedScenario={version:1,savedAt:new Date().toISOString(),decisions:copyDecisions([...choices.values()])};
+  savedResult=JSON.parse(JSON.stringify(result));
+  try {
+    localStorage.setItem(savedScenarioKey,JSON.stringify(savedScenario));
+    savedMessage='Вариант А сохранён в этом браузере. Можно менять Б; А останется доступен после обновления страницы.';
+  } catch(error) {
+    savedMessage='Браузер не разрешил запись: новый вариант А доступен только до закрытия или обновления страницы.';
+  }
+  renderComparison();
+  $('comparison').scrollIntoView({block:'start',behavior:'smooth'});
+}
+async function recalculateSavedScenario() {
+  if(!savedScenario||savedPending)return;
+  const token=++savedRevision, decisions=copyDecisions(savedScenario.decisions);
+  savedPending=true;renderComparison();
+  try {
+    const response=await fetch('/api/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(decisions)});
+    const payload=await response.json();
+    if(token!==savedRevision)return;
+    if(!response.ok||!payload.valid) {
+      savedResult=null;savedMessage='Сохранённый А не прошёл проверку текущих правил. Рассчитайте допустимый набор и замените вариант А.';
+    } else {
+      savedResult=payload;savedMessage='Сохранённый вариант А загружен из этого браузера и заново рассчитан Python. Нажмите «Восстановить А», чтобы вернуться к его решениям.';
+    }
+  } catch(error) {
+    if(token===savedRevision){savedResult=null;savedMessage='Не удалось проверить сохранённый А. Проверьте, что сервер запущен, и повторите проверку.';}
+  } finally {if(token===savedRevision){savedPending=false;renderComparison();}}
+}
+function loadSavedScenario() {
+  let raw;
+  try {raw=localStorage.getItem(savedScenarioKey);}
+  catch(error){savedMessage='Хранилище браузера недоступно. Сравнение работает в текущем сеансе.';renderComparison();return;}
+  if(!raw)return;
+  try {
+    if(raw.length>8192)throw new Error('size');
+    const value=JSON.parse(raw);
+    if(value?.version!==1||!Number.isFinite(Date.parse(value.savedAt))||!Array.isArray(value.decisions)||value.decisions.length!==5)throw new Error('format');
+    const ids=new Set();
+    const decisions=value.decisions.map(decision=>{
+      const measure=data.measures.find(m=>m.id===decision?.measure);
+      if(!measure||ids.has(measure.id))throw new Error('measure');
+      ids.add(measure.id);
+      if(measure.scope==='district') {
+        if(!data.districts.some(d=>d.name===decision.district))throw new Error('district');
+        return {measure:measure.id,district:decision.district};
+      }
+      return {measure:measure.id};
+    });
+    savedScenario={version:1,savedAt:new Date(value.savedAt).toISOString(),decisions};
+    recalculateSavedScenario();
+  } catch(error) {savedMessage='Сохранённый А не удалось прочитать. Рассчитайте новый сценарий и сохраните его как А.';renderComparison();}
+}
+async function restoreScenario() {
+  if(!savedResult||pending||savedPending)return;
+  choices=new Map(copyDecisions(savedScenario.decisions).map(d=>[d.measure,d]));
+  selected=savedScenario.decisions.find(d=>d.district)?.district||selected;
+  invalidate();renderMeasures();
+  await calculate();
 }
 function updateMeasureAvailability() {
   const remaining=data.budget-selectedCost();
@@ -243,7 +359,11 @@ async function init() {
     $('reset').addEventListener('click',()=>{choices.clear();invalidate();renderMeasures();});
     $('evaluate').addEventListener('click',calculate);
     $('analyze-ai').addEventListener('click',analyzeAI);
+    $('save-scenario').addEventListener('click',saveScenario);
+    $('restore-scenario').addEventListener('click',restoreScenario);
+    $('retry-scenario').addEventListener('click',recalculateSavedScenario);
     renderSummary();renderMap();renderDistrict();renderMeasures();
+    loadSavedScenario();
     checkAIStatus();
   } catch(error) {$('load-error').hidden=false;$('load-error').textContent='Не удалось загрузить данные. Запустите python web_server.py и обновите страницу.';}
 }
