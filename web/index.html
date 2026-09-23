@@ -66,6 +66,12 @@
       <p id="conclusion-summary" class="conclusion-summary"></p>
       <p id="score-explanation" class="section-note"></p>
       <p id="conclusion-model-note" class="report-note"></p>
+      <section class="ai-panel" aria-labelledby="ai-title">
+        <div class="section-heading"><div><p class="eyebrow">AI / АНАЛИТИК СЦЕНАРИЯ</p><h3 id="ai-title">Объяснить последствия с помощью AI</h3></div><button id="analyze-ai" class="button primary" disabled>Получить AI-анализ</button></div>
+        <p class="section-note">AI рассмотрит сочетание решений, пользу, риски и возможную реакцию жителей. Запрос отправляет учебный сценарий в настроенный AI-сервис и использует лимит вашего API-ключа.</p>
+        <p id="ai-status" class="ai-status" role="status" aria-live="polite">Проверяем настройки AI…</p>
+        <div id="ai-overview" hidden></div>
+      </section>
       <div class="conclusion-columns">
         <section aria-labelledby="direction-title"><h3 id="direction-title">Что произошло по направлениям</h3><p class="section-note">Значения здесь — средние по городу с учётом доли населения районов.</p><div id="direction-conclusions"></div></section>
         <section class="watchpoints" aria-labelledby="watchpoint-title"><h3 id="watchpoint-title">На что обратить внимание</h3><ul id="watchpoint-list"></ul><div id="resolved-critical"></div><div id="synergy-conclusions"></div></section>
@@ -74,7 +80,7 @@
       <div id="measure-conclusions" class="measure-conclusions"></div>
       <p id="conclusion-method" class="disclaimer"></p>
     </section>
-    <footer><span>NEWBIE · Аким на 5 часов</span><span>Учебный симулятор · AI-объяснение будет добавлено следующим этапом</span></footer>
+    <footer><span>NEWBIE · Аким на 5 часов</span><span>Точный расчёт по датасету · AI-анализ при подключении модели</span></footer>
   </main>
 </body>
 </html>

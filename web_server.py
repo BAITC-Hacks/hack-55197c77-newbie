@@ -7,6 +7,7 @@ from urllib.parse import urlsplit
 
 from simulator import baseline, evaluate, load_data
 from conclusions import build_conclusion
+from ai_analysis import AIError, analyze, public_status
 
 ROOT = Path(__file__).resolve().parent
 STATIC = {
@@ -37,6 +38,8 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/data":
             self.send_json({"data": load_data(), "baseline": baseline(),
                             "example": json.loads((ROOT / "examples" / "organizer.json").read_text(encoding="utf-8"))})
+        elif path == "/api/ai/status":
+            self.send_json(public_status())
         elif path in STATIC:
             filename, mime = STATIC[path]
             self.send_bytes((ROOT / "web" / filename).read_bytes(), mime)
@@ -44,7 +47,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json({"error": "Страница не найдена."}, 404)
 
     def do_POST(self):
-        if self.path != "/api/evaluate":
+        if self.path not in {"/api/evaluate", "/api/ai/analyze"}:
             self.send_json({"error": "Страница не найдена."}, 404)
             return
         origin = self.headers.get("Origin")
@@ -62,6 +65,12 @@ class Handler(BaseHTTPRequestHandler):
             decisions = json.loads(self.rfile.read(length))
         except (ValueError, UnicodeError):
             self.send_json({"error": "Не удалось прочитать JSON."}, 400)
+            return
+        if self.path == "/api/ai/analyze":
+            try:
+                self.send_json(analyze(decisions))
+            except AIError as error:
+                self.send_json({"error": str(error)}, error.status)
             return
         result = evaluate(decisions)
         if result["valid"]:

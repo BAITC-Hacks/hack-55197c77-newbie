@@ -29,7 +29,17 @@
 .reaction.concern { border-color:#c8986e; }
 .reaction h5 { font-size:11px; margin:0 0 6px; font-weight:700; }
 .reaction p { font-size:12px; line-height:1.8; color:var(--muted); margin:0; }
+.ai-panel { margin:24px 0; padding:22px; background:#f1f6ed; border:1px solid #b7cab0; border-radius:11px; }
+.ai-status { font-size:13px; line-height:1.7; color:var(--green); overflow-wrap:anywhere; }
+.ai-summary { font-size:17px; line-height:1.8; }
+.ai-columns { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; margin:22px 0; }
+.ai-columns ul { padding-left:18px; font-size:12px; line-height:1.85; }
+.ai-columns li { margin:9px 0; }
+.explanation-source { color:var(--green); font-size:11px; margin:18px 0 0; font-weight:700; }
+.ai-explanation { border-left:2px solid #90aa83; padding-left:12px; }
 @media(max-width:900px) {
+  .ai-columns { grid-template-columns:1fr; gap:12px; }
+  .ai-panel .section-heading { align-items:flex-start; flex-direction:column; gap:14px; }
   .conclusion-columns, .measure-conclusions { grid-template-columns:1fr; }
   .conclusion-columns { gap:22px; }
   .conclusion-summary { font-size:16px; }

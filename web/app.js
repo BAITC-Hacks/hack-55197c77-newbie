@@ -12,11 +12,12 @@ const directionNames = {transport:'Транспорт',ecology:'Экология
 const profiles = {'Есиль':'Сильные городские сервисы, но перегруженные дороги и школы.','Алматы':'Приоритеты района — обновление ЖКХ и снижение пробок.','Сарыарка':'Особого внимания требуют качество воздуха и озеленение.','Байконур':'Сбалансированный район с возможностями улучшения безопасности.','Нура':'Самые низкие стартовые показатели транспорта и социальной инфраструктуры.'};
 let data, initial, example, result = null, selected = 'Нура', view = 'before';
 let choices = new Map(), revision = 0, pending = false;
+let aiResult = null, aiPending = false, aiMessage = 'Проверяем настройки AI…';
 const fmt = (n) => n.toLocaleString('ru-RU',{maximumFractionDigits:2});
 function element(tag, className, text) { const node=document.createElement(tag); if(className)node.className=className; if(text!==undefined)node.textContent=text; return node; }
 function current() { return view === 'after' && result ? result : initial; }
 function status(message, error=false) { $('scenario-status').textContent=message; $('scenario-status').classList.toggle('error',error); $('scenario-status').hidden=!message; }
-function invalidate() { revision++; result=null; view='before'; status(''); renderSummary(); renderMap(); renderDistrict(); renderConclusion(); }
+function invalidate() { revision++; result=null; aiResult=null; aiMessage='После расчёта можно запросить новый AI-анализ.'; view='before'; status(''); renderSummary(); renderMap(); renderDistrict(); renderConclusion(); }
 function renderSummary() {
   const cost=data.measures.filter(m=>choices.has(m.id)).reduce((sum,m)=>sum+m.cost,0);
   const state=current();
@@ -96,7 +97,8 @@ function renderMeasures() {
 }
 async function calculate() {
   if(pending)return;
-  const requestRevision=revision;
+  const requestRevision=++revision;
+  aiResult=null;aiMessage='Числа рассчитает Python. Для объяснения сценария нажмите «Получить AI-анализ».';
   pending=true;renderSummary();status('');
   try {
     const response=await fetch('/api/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify([...choices.values()])});
@@ -109,6 +111,7 @@ async function calculate() {
 }
 function renderConclusion() {
   const report=result?.conclusion;
+  renderAI();
   $('conclusion').hidden=!report;
   $('report-link').hidden=!report;
   for(const id of ['direction-conclusions','watchpoint-list','resolved-critical','synergy-conclusions','measure-conclusions'])$(id).replaceChildren();
@@ -117,27 +120,72 @@ function renderConclusion() {
   $('score-explanation').textContent=report.score_explanation;
   $('conclusion-model-note').textContent=report.model_note;
   $('reaction-note').textContent=report.reaction_note;
-  $('conclusion-method').textContent=report.method_note;
+  $('conclusion-method').textContent=aiResult ? `Числа рассчитаны Python по датасету. Пояснения направлений и реакций жителей получены от AI (${aiResult.model}). Гипотезы AI могут ошибаться и не меняют Score.` : 'Числа и пояснения ниже сформированы по правилам, без LLM. AI-разбор можно запросить кнопкой выше после настройки доступа.';
   report.directions.forEach(direction=>{
     const card=element('article','direction-conclusion'), heading=element('div','report-row');
     heading.append(element('h4','',direction.title),element('span','pill',`Бюджет: ${direction.spent}`));
-    card.append(heading,element('p','',direction.text));$('direction-conclusions').append(card);
+    card.append(heading,element('p','',direction.text));
+    const aiDirection=aiResult?.report.directions.find(item=>item.id===direction.id);
+    if(aiDirection)card.append(element('p','ai-explanation',`AI: ${aiDirection.explanation}`));
+    $('direction-conclusions').append(card);
   });
   report.watchpoints.forEach(text=>$('watchpoint-list').append(element('li','',text)));
   if(report.resolved_critical.length){$('resolved-critical').append(element('h4','','Вышли из критической зоны'));report.resolved_critical.forEach(text=>$('resolved-critical').append(element('p','',text)));}
   if(report.synergies.length){$('synergy-conclusions').append(element('h4','','Сработали совместные эффекты'));report.synergies.forEach(item=>$('synergy-conclusions').append(element('p','',item.text)));}
   report.measures.forEach(measure=>{
+    const aiMeasure=aiResult?.report.measures.find(item=>item.id===measure.id);
     const card=element('article','measure-conclusion');
     card.append(element('p','eyebrow',`${measure.id} / ${measure.scope} / ${measure.cost} усл. ед.`),element('h4','',measure.name));
     const facts=element('div','measure-facts');facts.append(element('strong','','Эффект по датасету'));
     facts.append(element('p','',measure.effects.map(effect=>`${effect.label}: ${effect.delta>0?'+':''}${fmt(effect.delta)}`).join(' · ')));
     facts.append(element('p','timing',measure.timing));
     facts.append(element('p','effect-note','Изменение от этой меры в каждом затронутом районе, до ограничения 0–100. Бонусы сочетаний указаны отдельно.'));
-    card.append(facts,element('p','mechanism',measure.mechanism));
-    const support=element('div','reaction support');support.append(element('h5','','Кто может поддержать'),element('p','',measure.possible_support));
-    const concerns=element('div','reaction concern');concerns.append(element('h5','','Кто может быть недоволен и почему'),element('p','',measure.possible_concerns));
+    card.append(facts,element('p','explanation-source',aiMeasure?'Пояснение AI':'Пояснение по правилам'),element('p','mechanism',aiMeasure?.consequences||measure.mechanism));
+    const support=element('div','reaction support');support.append(element('h5','','Кто может поддержать'),element('p','',aiMeasure?.possible_support||measure.possible_support));
+    const concerns=element('div','reaction concern');concerns.append(element('h5','','Кто может быть недоволен и почему'),element('p','',aiMeasure?.possible_concerns||measure.possible_concerns));
     card.append(support,concerns);$('measure-conclusions').append(card);
   });
+}
+function renderAI() {
+  $('analyze-ai').disabled=!result||pending||aiPending||Boolean(aiResult);
+  $('analyze-ai').textContent=aiPending?'AI анализирует…':aiResult?'AI-анализ получен':'Получить AI-анализ';
+  $('ai-status').textContent=aiPending?'Ожидаем ответ модели. Обычно это занимает до минуты.':aiMessage;
+  $('ai-overview').replaceChildren();$('ai-overview').hidden=!aiResult;
+  if(!aiResult)return;
+  const report=aiResult.report;
+  $('ai-overview').append(element('p','ai-summary',report.summary));
+  const columns=element('div','ai-columns');
+  for(const [key,title] of [['strengths','Сильные стороны'],['risks','Риски и компромиссы'],['recommendations','Что проверить дальше']]) {
+    const section=element('section');section.append(element('h4','',title));
+    const list=element('ul');report[key].forEach(text=>list.append(element('li','',text)));section.append(list);columns.append(section);
+  }
+  $('ai-overview').append(columns,element('p','section-note','Ниже пояснения всех направлений и пяти решений обновлены ответом AI. Реакции жителей остаются предположениями; рассчитанные значения не изменились.'));
+}
+async function analyzeAI() {
+  if(!result||pending||aiPending||aiResult)return;
+  const requestRevision=revision, decisions=[...choices.values()];
+  aiPending=true;renderAI();
+  try {
+    const configResponse=await fetch('/api/ai/status');
+    const config=await configResponse.json();
+    if(requestRevision!==revision)return;
+    if(!configResponse.ok||!config.configured){aiMessage=config.message||'Не удалось проверить настройки AI.';return;}
+    const response=await fetch('/api/ai/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(decisions)});
+    const payload=await response.json();
+    if(requestRevision!==revision)return;
+    if(!response.ok){aiMessage=payload.error||'AI не ответил. Расчёт сохранён; повторите запрос.';return;}
+    aiResult=payload;
+    aiMessage=`Ответ AI получен · модель ${payload.model} · ${new Date(payload.generated_at).toLocaleTimeString('ru-RU')}`;
+  } catch(error) {
+    if(requestRevision===revision)aiMessage='Нет связи с сервером AI-анализа. Расчёт сохранён; повторите запрос.';
+  } finally {aiPending=false;renderConclusion();}
+}
+async function checkAIStatus() {
+  const requestRevision=revision;
+  try {
+    const response=await fetch('/api/ai/status');const payload=await response.json();
+    if(requestRevision===revision&&!aiPending&&!aiResult){aiMessage=payload.message||'Не удалось проверить настройки AI.';renderAI();}
+  } catch(error) {if(requestRevision===revision){aiMessage='Не удалось проверить настройки AI. Можно повторить запрос после расчёта.';renderAI();}}
 }
 async function init() {
   try {
@@ -151,7 +199,9 @@ async function init() {
     $('example').addEventListener('click',()=>{choices=new Map(example.map(d=>[d.measure,{...d}]));invalidate();renderMeasures();status('Пример организаторов загружен. Нажмите «Рассчитать сценарий».');});
     $('reset').addEventListener('click',()=>{choices.clear();invalidate();renderMeasures();});
     $('evaluate').addEventListener('click',calculate);
+    $('analyze-ai').addEventListener('click',analyzeAI);
     renderSummary();renderMap();renderDistrict();renderMeasures();
+    checkAIStatus();
   } catch(error) {$('load-error').hidden=false;$('load-error').textContent='Не удалось загрузить данные. Запустите python web_server.py и обновите страницу.';}
 }
 init();
