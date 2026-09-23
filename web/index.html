@@ -19,48 +19,85 @@
     <div id="load-error" class="notice error" role="alert" hidden></div>
     <section class="overview" aria-label="Сводка города">
       <div class="metric"><span>Качество жизни города</span><div><strong id="city-score">—</strong><small>/ 100</small></div><p id="score-caption">Исходное состояние</p></div>
-      <div class="metric"><span>Остаток бюджета</span><div><strong id="budget">100</strong><small>усл. ед.</small></div><p id="budget-caption">Доступно для ваших решений</p><div class="budget-track"><i id="budget-bar"></i></div></div>
+      <div class="metric budget-metric"><span>Остаток бюджета</span><div><strong id="budget">100</strong><small>из <span id="budget-total">100</span> усл. ед.</small></div><p id="budget-caption">Доступно для ваших решений</p><div class="budget-track"><i id="budget-bar"></i></div></div>
       <div class="metric"><span>Выбрано мероприятий</span><div><strong id="decision-count">0</strong><small>/ 5</small></div><p>Не более двух из одного направления</p></div>
       <div class="metric"><span>Критические показатели</span><div><strong id="critical-count">—</strong><small id="critical-label">ниже 40</small></div><p id="critical-caption">Точки, которым нужно внимание</p></div>
     </section>
     <div class="workspace">
       <section class="panel map-panel" aria-labelledby="map-heading">
-        <div class="section-heading"><div><p class="eyebrow">01 / ИССЛЕДУЙТЕ ГОРОД</p><h2 id="map-heading">Карта районов</h2></div><div class="segmented" role="group" aria-label="Состояние карты"><button id="show-before" aria-pressed="true">До</button><button id="show-after" aria-pressed="false" disabled>После</button></div></div>
-        <p class="section-note">Нажмите на район, чтобы увидеть его сильные и слабые стороны.</p>
+        <div class="section-heading"><div><p class="eyebrow">01 / ИССЛЕДУЙТЕ ГОРОД</p><h2 id="map-heading">Астана · карта районов</h2></div><div class="segmented" role="group" aria-label="Состояние карты"><button id="show-before" aria-pressed="true">До</button><button id="show-after" aria-pressed="false" disabled>После</button></div></div>
+        <p class="section-note">Выберите район на карте. Его показатели появятся в паспорте района.</p>
         <div class="map-wrap">
-          <svg id="city-map" viewBox="0 0 650 480" aria-label="Интерактивная схема пяти районов" role="group">
-            <defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#d4ded5"/></pattern></defs>
-            <rect width="650" height="480" fill="url(#grid)"/>
-            <text x="30" y="36" class="map-label">СХЕМА / НЕ В МАСШТАБЕ</text>
-            <path class="map-river" d="M20 354 C120 282 204 348 290 271 S460 298 628 160"/>
-            <g class="district" data-district="Сарыарка" role="button" tabindex="0" aria-label="Район Сарыарка" aria-pressed="false"><path d="M94 87 L259 64 L288 172 L235 231 L90 241 L59 177 Z"/><text x="172" y="147">Сарыарка</text><text class="map-score" x="172" y="182">—</text></g>
-            <g class="district" data-district="Байконур" role="button" tabindex="0" aria-label="Район Байконур" aria-pressed="false"><path d="M271 62 L432 84 L449 197 L306 219 L249 232 L300 176 Z"/><text x="358" y="130">Байконур</text><text class="map-score" x="358" y="166">—</text></g>
-            <g class="district" data-district="Алматы" role="button" tabindex="0" aria-label="Район Алматы" aria-pressed="false"><path d="M444 88 L556 116 L600 221 L553 337 L443 303 L417 241 L460 203 Z"/><text x="513" y="206">Алматы</text><text class="map-score" x="513" y="241">—</text></g>
-            <g class="district" data-district="Есиль" role="button" tabindex="0" aria-label="Район Есиль" aria-pressed="false"><path d="M96 254 L243 245 L289 296 L275 408 L148 425 L79 346 Z"/><text x="185" y="319">Есиль</text><text class="map-score" x="185" y="354">—</text></g>
-            <g class="district" data-district="Нура" role="button" tabindex="0" aria-label="Район Нура" aria-pressed="false"><path d="M257 243 L307 232 L407 251 L434 314 L541 349 L458 421 L289 410 L302 290 Z"/><text x="386" y="323">Нура</text><text class="map-score" x="386" y="358">—</text></g>
-            <g class="compass"><path d="M605 45 L605 78 M596 56 L605 45 L614 56"/><text x="605" y="34">С</text></g>
+          <svg id="city-map" viewBox="0 0 1000 740" aria-label="Приближённая карта Астаны: пять районов учебной модели" role="group">
+            <defs>
+              <pattern id="map-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#dce5d5" stroke-width=".8"/></pattern>
+              <pattern id="urban-grid" width="28" height="23" patternUnits="userSpaceOnUse" patternTransform="rotate(-18)"><path d="M28 0H0V23" fill="none" stroke="#fffef9" stroke-width="1.5" opacity=".42"/></pattern>
+              <clipPath id="built-area"><path d="M245 190L515 100L765 245L815 415L625 560L350 560L205 395Z"/></clipPath>
+            </defs>
+            <rect width="1000" height="740" fill="#edf2e6"/>
+            <rect width="1000" height="740" fill="url(#map-grid)"/>
+            <g class="green-belt" aria-hidden="true"><path d="M90 270Q110 150 300 135L340 190Q230 200 195 310Z"/><path d="M160 440Q210 655 450 686L445 715Q170 700 112 472Z"/><path d="M690 615L875 472L907 493L728 667Z"/></g>
+            <text x="35" y="40" class="map-label">АСТАНА / ПЯТЬ РАЙОНОВ МОДЕЛИ</text>
+            <g class="district" data-district="Сарыарка" role="button" tabindex="0" aria-label="Район Сарыарка" aria-pressed="false">
+              <path d="M130 312L142 270L126 248L167 231L171 197L235 188L263 153L325 164L363 141L398 159L424 151L451 206L442 254L473 297L459 321Q433 306 405 321Q367 347 333 326Q302 303 273 322Q239 344 216 322L197 341L163 321Z"/>
+            </g>
+            <g class="district" data-district="Байконур" role="button" tabindex="0" aria-label="Район Байконур" aria-pressed="false">
+              <path d="M424 151L445 113L433 86L493 59L529 74L569 59L601 84L586 126L622 149L604 188L637 211L612 250L597 287L563 330L531 349L506 330L484 336L459 321L473 297L442 254L451 206Z"/>
+            </g>
+            <g class="district" data-district="Алматы" role="button" tabindex="0" aria-label="Район Алматы" aria-pressed="false">
+              <path d="M637 211L604 188L622 149L664 145L683 112L731 131L748 106L790 128L824 183L865 191L853 230L899 248L913 285L883 324L911 359L943 375L924 433L954 469L911 494L874 476L830 485L791 465L753 478L720 453L678 446L656 421L618 422L592 397L568 397L556 373L531 349L563 330L597 287L612 250Z"/>
+            </g>
+            <g class="district" data-district="Нура" role="button" tabindex="0" aria-label="Район Нура" aria-pressed="true">
+              <path d="M130 312L163 321L197 341L216 322Q239 344 273 322Q302 303 333 326Q367 347 405 321Q433 306 459 321L484 336L506 330L531 349L556 373L534 417L523 474L502 550L487 628L486 680L428 669L385 660L353 660L338 669L311 657L297 660L264 646L245 621L236 593L211 570L214 530L197 509L183 465L165 429L148 388L124 365L141 345Z"/>
+            </g>
+            <g class="district" data-district="Есиль" role="button" tabindex="0" aria-label="Район Есиль" aria-pressed="false">
+              <path d="M556 373L568 397L592 397L618 422L656 421L678 446L720 453L753 478L791 465L830 485L874 476L911 494L886 535L861 572L836 603L821 592L809 610L774 624L738 622L727 632L736 643L710 659L693 680L681 710L636 699L587 692L538 684L486 680L487 628L502 550L523 474L534 417Z"/>
+            </g>
+            <g class="map-context" aria-hidden="true">
+              <rect x="160" y="90" width="720" height="560" fill="url(#urban-grid)" clip-path="url(#built-area)"/>
+              <path class="map-road major" d="M556 373L534 417L523 474L502 550L487 628L486 680"/>
+              <path class="map-road" d="M224 206L431 273L618 291L857 300M199 261L450 290L660 343L875 370M248 454L397 419L606 414L758 452M283 522L437 487L652 482M396 356L372 417L389 492L409 588"/>
+              <path class="map-road" d="M327 185L358 280M510 97L485 267L516 337M698 191L666 332L747 443M608 444L581 526L560 625"/>
+              <path class="map-river" d="M27 286C77 305 98 329 130 312L163 321L197 341L216 322Q239 344 273 322Q302 303 333 326Q367 347 405 321Q433 306 459 321L484 336L506 330L531 349L556 373L568 397L592 397L618 422L656 421L678 446L720 453L753 478L791 465L830 485L874 476L911 494L982 519"/>
+              <path class="map-tributary" d="M643 93Q673 169 625 239L610 287L564 338L531 349"/>
+              <text x="238" y="375" class="river-name" transform="rotate(9 238 375)">р. Есиль</text>
+              <text x="510" y="593" class="road-name" transform="rotate(-79 510 593)">пр. Кабанбай батыра</text>
+              <g class="landmark"><circle cx="486" cy="410" r="4"/><text x="471" y="396" text-anchor="end">Хан Шатыр</text></g>
+              <g class="landmark"><circle cx="585" cy="440" r="4"/><text x="600" y="436">Байтерек</text></g>
+              <g class="landmark"><circle cx="563" cy="545" r="4"/><text x="577" y="540">EXPO</text></g>
+              <g class="compass"><path d="M939 100V49M929 63L939 49L949 63"/><text x="939" y="36">С</text><text x="939" y="120">Ю</text></g>
+              <text x="36" y="694" class="map-label">ЛЕВЫЙ БЕРЕГ</text>
+              <text x="719" y="82" class="map-label">ПРАВЫЙ БЕРЕГ</text>
+            </g>
+            <g class="map-district-labels" aria-hidden="true"><g><text x="291" y="240">Сарыарка</text><text class="map-score" data-score-for="Сарыарка" x="291" y="281">—</text></g><g><text x="529" y="174">Байконур</text><text class="map-score" data-score-for="Байконур" x="529" y="215">—</text></g><g><text x="773" y="303">Алматы</text><text class="map-score" data-score-for="Алматы" x="773" y="344">—</text></g><g><text x="350" y="485">Нура</text><text class="map-score" data-score-for="Нура" x="350" y="526">—</text></g><g><text x="665" y="556">Есиль</text><text class="map-score" data-score-for="Есиль" x="665" y="597">—</text></g></g>
           </svg>
         </div>
         <div id="district-picker" class="district-picker" aria-label="Выбрать район"></div>
         <div class="map-legend"><span><i class="legend-low"></i> Ниже 50</span><span><i class="legend-mid"></i> 50–59,99</span><span><i class="legend-high"></i> От 60</span></div>
-        <p class="disclaimer">Схематическое расположение, не географические границы. Пять районов и синтетические показатели из задания.</p>
+        <p class="disclaimer">Приближённая карта по расположению районов в 2023 году. Границы и ориентиры обобщены; показатели — из задания. <a href="https://www.gov.kz/memleket/entities/astana-nura/press/news/details/560659?lang=ru" target="_blank" rel="noopener noreferrer">Основа расположения районов ↗</a></p>
       </section>
-      <section class="panel detail-panel" aria-labelledby="district-title">
+      <section id="district-passport" class="panel detail-panel" aria-labelledby="district-title" tabindex="-1">
         <div class="section-heading"><div><p class="eyebrow">ПАСПОРТ РАЙОНА</p><h2 id="district-title">Нура</h2></div><span id="district-pop" class="pill">— населения</span></div>
         <p id="district-profile" class="section-note"></p>
         <div class="district-summary"><div><span>Оценка района</span><strong id="district-score">—</strong></div><span id="district-delta" class="delta"></span></div>
+        <div class="district-condition"><strong id="district-condition">Загружаем показатели</strong><span id="district-view-label">Исходное состояние</span></div>
         <div class="bar-legend"><span><i></i> До</span><span><i></i> После</span><span>Шкала 0–100 · больше — лучше</span></div>
         <div id="indicators"></div>
       </section>
-    </div>
     <section class="panel decisions-panel" aria-labelledby="decisions-title">
       <div class="section-heading"><div><p class="eyebrow">02 / ВЫБЕРИТЕ ИЗМЕНЕНИЯ</p><h2 id="decisions-title">Ваши пять решений</h2></div><div class="toolbar"><button id="example" class="button secondary" disabled>Загрузить пример</button><button id="reset" class="button quiet" disabled>Сбросить</button></div></div>
       <p class="section-note">Выберите ровно пять уникальных мероприятий. Для районных мер укажите место реализации.</p>
+      <div id="decision-budget" class="decision-budget" data-level="normal" aria-label="Бюджет выбранных решений">
+        <div class="budget-balance"><span>Осталось на решения</span><div><strong id="selection-budget">100</strong><span> / <span id="selection-budget-total">100</span> усл. ед.</span></div></div>
+        <div class="budget-meter-block"><div class="budget-scale"><span id="budget-scale-start">100</span><span>0</span></div><div id="selection-budget-meter" class="selection-budget-meter" role="meter" aria-label="Оставшийся бюджет" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><i id="selection-budget-bar"></i></div><p id="budget-message" role="status" aria-live="polite">Бюджет целиком доступен</p></div>
+        <div class="selection-counter"><strong id="selection-count">0 / 5</strong><span>решений</span></div>
+      </div>
       <div id="measures" class="measures"></div>
       <div class="action-bar"><div><strong id="selection-summary">Выбрано 0 из 5</strong><p id="selection-hint">Выберите мероприятия, чтобы рассчитать изменения.</p></div><button id="evaluate" class="button primary" disabled>Рассчитать сценарий <span aria-hidden="true">↗</span></button></div>
       <div id="scenario-status" class="notice" role="status" aria-live="polite" hidden></div>
       <a id="report-link" class="report-link" href="#conclusion" hidden>Читать заключение о последствиях ↓</a>
     </section>
+    </div>
     <section id="conclusion" class="panel conclusion-panel" aria-labelledby="conclusion-title" hidden>
       <div class="section-heading"><div><p class="eyebrow">03 / ПОСЛЕДСТВИЯ РЕШЕНИЙ</p><h2 id="conclusion-title">Что изменят ваши решения</h2></div><span class="pill">По данным модели</span></div>
       <p id="conclusion-summary" class="conclusion-summary"></p>
