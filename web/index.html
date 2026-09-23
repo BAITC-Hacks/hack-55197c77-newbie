@@ -10,9 +10,17 @@
 </head>
 <body>
   <header class="masthead">
-    <a class="brand" href="/" aria-label="Аким на 5 часов — начало"><span class="brand-mark">А</span><span>АКИМ <small>НА 5 ЧАСОВ</small></span></a>
+    <a class="brand" href="/" aria-label="Аким на 5 часов — начало">
+      <span class="brand-mark"><svg class="brand-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <rect width="64" height="64" rx="18" fill="#194e42"/>
+        <path d="M13 41V29h10v12M41 41V25h10v16" fill="none" stroke="#bed2ae" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M17 34h2m26-4h2m-2 6h2" stroke="#bed2ae" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="32" cy="19" r="5.5" fill="#e8c77c"/>
+        <path d="M27 27l4 13m6-13-4 13m-7 2h12" fill="none" stroke="#f5f0df" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M12 49c8-5 13-5 20-1s13 4 20-1" fill="none" stroke="#9cc8c6" stroke-width="3" stroke-linecap="round"/>
+      </svg></span><span>АКИМ <small>НА 5 ЧАСОВ</small></span>
+    </a>
     <div class="header-note"><span class="live-dot"></span> Лаборатория городских решений</div>
-    <span class="edition">HACKALEM AI / NEWBIE</span>
   </header>
   <main>
     <div class="intro"><div><p class="eyebrow">АСТАНА · УЧЕБНАЯ МОДЕЛЬ</p><h1>Город начинается<br>с ваших решений.</h1><p class="lead">Пять районов. Сто единиц бюджета. Выберите, что изменить.</p></div><div class="intro-aside"><span>ГОРИЗОНТ ПЛАНИРОВАНИЯ</span><strong>2 года</strong><p>Эффект каждого мероприятия<br>учитывает время его реализации.</p></div></div>
@@ -111,7 +119,8 @@
       </div>
     </section>
     <section id="conclusion" class="panel conclusion-panel" aria-labelledby="conclusion-title" hidden>
-      <div class="section-heading"><div><p class="eyebrow">03 / ПОСЛЕДСТВИЯ РЕШЕНИЙ</p><h2 id="conclusion-title">Что изменят ваши решения</h2></div><span class="pill">По данным модели</span></div>
+      <div class="section-heading"><div><p class="eyebrow">03 / ПОСЛЕДСТВИЯ РЕШЕНИЙ</p><h2 id="conclusion-title">Что изменят ваши решения</h2></div><div class="toolbar"><span class="pill">По данным модели</span><button id="download-report" class="button secondary" disabled>Скачать отчёт .txt</button></div></div>
+      <p id="download-status" class="section-note" role="status" aria-live="polite" hidden></p>
       <p id="conclusion-summary" class="conclusion-summary"></p>
       <p id="score-explanation" class="section-note"></p>
       <p id="conclusion-model-note" class="report-note"></p>

@@ -271,6 +271,7 @@ async function calculate() {
 function renderConclusion() {
   const report=result?.conclusion;
   renderAI();
+  $('download-status').hidden=true;
   $('conclusion').hidden=!report;
   $('report-link').hidden=!report;
   for(const id of ['direction-conclusions','watchpoint-list','resolved-critical','synergy-conclusions','measure-conclusions'])$(id).replaceChildren();
@@ -306,6 +307,8 @@ function renderConclusion() {
   });
 }
 function renderAI() {
+  $('download-report').disabled=!result||pending||aiPending;
+  $('download-report').title=aiPending?'Дождитесь завершения AI-анализа':'Скачать текущий расчёт и полученные пояснения';
   $('analyze-ai').disabled=!result||pending||aiPending||Boolean(aiResult);
   $('analyze-ai').textContent=aiPending?'AI анализирует…':aiResult?'AI-анализ получен':'Получить AI-анализ';
   $('ai-status').textContent=aiPending?'Ожидаем ответ модели. Обычно это занимает до минуты.':aiMessage;
@@ -346,6 +349,76 @@ async function checkAIStatus() {
     if(requestRevision===revision&&!aiPending&&!aiResult){aiMessage=payload.message||'Не удалось проверить настройки AI.';renderAI();}
   } catch(error) {if(requestRevision===revision){aiMessage='Не удалось проверить настройки AI. Можно повторить запрос после расчёта.';renderAI();}}
 }
+function buildTextReport() {
+  const precise=n=>n.toLocaleString('ru-RU',{maximumFractionDigits:5});
+  const signed=n=>`${n>1e-9?'+':''}${precise(Math.abs(n)<1e-9?0:n)}`;
+  const lines=['АКИМ НА 5 ЧАСОВ — ОТЧЁТ О СЦЕНАРИИ',`Сформирован: ${new Date().toLocaleString('ru-RU')}`,
+    'Учебная модель на синтетических данных. Результат не является прогнозом реальных городских инвестиций.','',
+    'ИТОГ РАСЧЁТА',`Балл города: ${precise(initial.score)} → ${precise(result.score)} (изменение ${signed(result.score_change)})`,
+    `Потрачено: ${result.cost} из ${data.budget} усл. ед. Остаток: ${result.remaining_budget}.`,
+    `Критических показателей ниже 40: ${initial.critical_count} → ${result.critical_count}.`,
+    'Горизонт расчёта: 2 года. Числа рассчитаны Python по правилам датасета.','','ВЫБРАННЫЕ РЕШЕНИЯ'];
+  const addDecisions=decisions=>decisions.forEach(decision=>{
+    const measure=data.measures.find(m=>m.id===decision.measure);
+    lines.push(`${measure.id}. ${measure.name} | ${measure.scope==='district'?decision.district:'весь город'} | ${measure.cost} усл. ед. | задержка ${measure.lag} кв.`);
+  });
+  addDecisions([...choices.values()]);
+  lines.push('','ПОКАЗАТЕЛИ РАЙОНОВ: ДО → ПОСЛЕ');
+  data.districts.forEach(d=>{
+    lines.push('',`${d.name} — оценка ${precise(initial.district_scores[d.name])} → ${precise(result.district_scores[d.name])}`);
+    groups.forEach(([group,items])=>{
+      lines.push(`  ${group}`);
+      items.forEach(([key,label])=>lines.push(`    ${label}: ${precise(initial.indicators[d.name][key])} → ${precise(result.indicators[d.name][key])}${result.indicators[d.name][key]<40?' [ниже критического порога 40]':''}`));
+    });
+  });
+  if(savedScenario&&savedResult) {
+    lines.push('','СРАВНЕНИЕ С СОХРАНЁННЫМ ВАРИАНТОМ А',`Вариант А сохранён: ${new Date(savedScenario.savedAt).toLocaleString('ru-RU')}`,
+      `Score А: ${precise(savedResult.score)}. Score Б (текущий): ${precise(result.score)}. Б − А: ${signed(result.score-savedResult.score)}.`,
+      `Потрачено А / Б: ${savedResult.cost} / ${result.cost}. Остаток А / Б: ${savedResult.remaining_budget} / ${result.remaining_budget}.`,
+      `Критических показателей А / Б: ${savedResult.critical_count} / ${result.critical_count}.`,'Решения сохранённого А:');
+    addDecisions(savedScenario.decisions);
+    lines.push('Оценки районов А → Б:');
+    data.districts.forEach(d=>lines.push(`  ${d.name}: ${precise(savedResult.district_scores[d.name])} → ${precise(result.district_scores[d.name])} (${signed(result.district_scores[d.name]-savedResult.district_scores[d.name])})`));
+  }
+  const conclusion=result.conclusion;
+  lines.push('','ЗАКЛЮЧЕНИЕ ПО ПРАВИЛАМ — БЕЗ LLM',conclusion.summary,conclusion.score_explanation,conclusion.model_note,conclusion.reaction_note,'');
+  conclusion.directions.forEach(d=>lines.push(`${d.title} (бюджет ${d.spent}): ${d.text}`,''));
+  if(conclusion.watchpoints.length)lines.push('На что обратить внимание:',...conclusion.watchpoints.map(text=>`- ${text}`),'');
+  if(conclusion.resolved_critical.length)lines.push('Вышли из критической зоны:',...conclusion.resolved_critical.map(text=>`- ${text}`),'');
+  if(conclusion.synergies.length)lines.push('Совместные эффекты:',...conclusion.synergies.map(item=>`- ${item.text}`),'');
+  conclusion.measures.forEach(m=>{
+    lines.push(`${m.id}. ${m.name} — ${m.scope}`,
+      `Эффекты по датасету: ${m.effects.map(effect=>`${effect.label}: ${signed(effect.delta)}`).join('; ')}`,
+      'Эффекты отдельной меры указаны до ограничения 0–100. Бонусы сочетаний показаны отдельно.',m.timing,m.mechanism,
+      `Кто может поддержать: ${m.possible_support}`,`Кто может быть недоволен: ${m.possible_concerns}`,'');
+  });
+  if(aiResult) {
+    const report=aiResult.report;
+    lines.push('ОТДЕЛЬНЫЙ AI-АНАЛИЗ',`Модель: ${aiResult.model}. Ответ получен: ${new Date(aiResult.generated_at).toLocaleString('ru-RU')}.`,
+      'Текст ниже получен от модели. Возможные реакции жителей — гипотезы, не результаты опроса. AI не изменяет числовой расчёт.',report.summary,'');
+    for(const [key,title] of [['strengths','Сильные стороны'],['risks','Риски и компромиссы'],['recommendations','Что проверить дальше']])lines.push(title,...report[key].map(text=>`- ${text}`),'');
+    lines.push('AI по направлениям:');
+    report.directions.forEach(d=>lines.push(`${directionNames[d.id]||d.id}: ${d.explanation}`,''));
+    lines.push('AI по выбранным мерам:');
+    report.measures.forEach(m=>lines.push(m.id,m.consequences,`Возможная поддержка: ${m.possible_support}`,`Возможное недовольство: ${m.possible_concerns}`,''));
+  } else lines.push('AI-АНАЛИЗ: не запрошен или не получен. Пояснения выше сформированы по правилам.');
+  lines.push('','ИСТОЧНИКИ',
+    'ТЗ: https://docs.google.com/document/d/1oDZtYnBgbcn_Ii7vleP87hkARJ2HmbXl7Cw_rsCxqpo/edit',
+    'Датасет: https://docs.google.com/document/d/1Uc-GdGoKhDY-spu8V50-ZMm33t2CjYLP/edit');
+  return lines.join('\n');
+}
+function downloadReport() {
+  if(!result||pending||aiPending)return;
+  try {
+    const blob=new Blob(['\uFEFF',buildTextReport().replace(/\n/g,'\r\n')],{type:'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob), link=element('a');
+    link.href=url;link.download=`akim-report-${new Date().toISOString().replace(/[:.]/g,'-')}.txt`;
+    document.body.append(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
+    $('download-status').textContent='Отчёт подготовлен для скачивания. Его можно открыть в Блокноте или другом текстовом редакторе.';
+  } catch(error) {$('download-status').textContent='Не удалось подготовить файл. Повторите скачивание.';}
+  $('download-status').hidden=false;
+}
 async function init() {
   try {
     const response=await fetch('/api/data');if(!response.ok)throw new Error('data');
@@ -362,6 +435,7 @@ async function init() {
     $('save-scenario').addEventListener('click',saveScenario);
     $('restore-scenario').addEventListener('click',restoreScenario);
     $('retry-scenario').addEventListener('click',recalculateSavedScenario);
+    $('download-report').addEventListener('click',downloadReport);
     renderSummary();renderMap();renderDistrict();renderMeasures();
     loadSavedScenario();
     checkAIStatus();

@@ -3,6 +3,10 @@
 /* Large city workspace and the budget visible throughout the decision list. */
 main { max-width:1840px; padding:0 clamp(18px,3vw,48px); }
 .masthead { height:76px; padding:0 clamp(18px,3vw,48px); }
+.brand { gap:13px; }
+.brand-mark { display:block; flex:0 0 54px; width:54px; height:54px; padding:0; border-radius:16px; background:transparent; }
+.brand-icon { display:block; width:100%; height:100%; }
+.brand:focus-visible { outline:3px solid #c77434; outline-offset:5px; border-radius:12px; }
 .intro { padding:26px 0 24px; }
 h1 { font-size:clamp(32px,3vw,43px); }
 .overview { margin-bottom:22px; }
