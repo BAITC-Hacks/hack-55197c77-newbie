@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Аким на 5 часов — карта решений</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="masthead">
+    <a class="brand" href="/" aria-label="Аким на 5 часов — начало"><span class="brand-mark">А</span><span>АКИМ <small>НА 5 ЧАСОВ</small></span></a>
+    <div class="header-note"><span class="live-dot"></span> Лаборатория городских решений</div>
+    <span class="edition">HACKALEM AI / NEWBIE</span>
+  </header>
+  <main>
+    <div class="intro"><div><p class="eyebrow">АСТАНА · УЧЕБНАЯ МОДЕЛЬ</p><h1>Город начинается<br>с ваших решений.</h1><p class="lead">Пять районов. Сто единиц бюджета. Выберите, что изменить.</p></div><div class="intro-aside"><span>ГОРИЗОНТ ПЛАНИРОВАНИЯ</span><strong>2 года</strong><p>Эффект каждого мероприятия<br>учитывает время его реализации.</p></div></div>
+    <div id="load-error" class="notice error" role="alert" hidden></div>
+    <section class="overview" aria-label="Сводка города">
+      <div class="metric"><span>Качество жизни города</span><div><strong id="city-score">—</strong><small>/ 100</small></div><p id="score-caption">Исходное состояние</p></div>
+      <div class="metric"><span>Остаток бюджета</span><div><strong id="budget">100</strong><small>усл. ед.</small></div><p id="budget-caption">Доступно для ваших решений</p><div class="budget-track"><i id="budget-bar"></i></div></div>
+      <div class="metric"><span>Выбрано мероприятий</span><div><strong id="decision-count">0</strong><small>/ 5</small></div><p>Не более двух из одного направления</p></div>
+      <div class="metric"><span>Критические показатели</span><div><strong id="critical-count">—</strong><small id="critical-label">ниже 40</small></div><p id="critical-caption">Точки, которым нужно внимание</p></div>
+    </section>
+    <div class="workspace">
+      <section class="panel map-panel" aria-labelledby="map-heading">
+        <div class="section-heading"><div><p class="eyebrow">01 / ИССЛЕДУЙТЕ ГОРОД</p><h2 id="map-heading">Карта районов</h2></div><div class="segmented" role="group" aria-label="Состояние карты"><button id="show-before" aria-pressed="true">До</button><button id="show-after" aria-pressed="false" disabled>После</button></div></div>
+        <p class="section-note">Нажмите на район, чтобы увидеть его сильные и слабые стороны.</p>
+        <div class="map-wrap">
+          <svg id="city-map" viewBox="0 0 650 480" aria-label="Интерактивная схема пяти районов" role="group">
+            <defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#d4ded5"/></pattern></defs>
+            <rect width="650" height="480" fill="url(#grid)"/>
+            <text x="30" y="36" class="map-label">СХЕМА / НЕ В МАСШТАБЕ</text>
+            <path class="map-river" d="M20 354 C120 282 204 348 290 271 S460 298 628 160"/>
+            <g class="district" data-district="Сарыарка" role="button" tabindex="0" aria-label="Район Сарыарка" aria-pressed="false"><path d="M94 87 L259 64 L288 172 L235 231 L90 241 L59 177 Z"/><text x="172" y="147">Сарыарка</text><text class="map-score" x="172" y="182">—</text></g>
+            <g class="district" data-district="Байконур" role="button" tabindex="0" aria-label="Район Байконур" aria-pressed="false"><path d="M271 62 L432 84 L449 197 L306 219 L249 232 L300 176 Z"/><text x="358" y="130">Байконур</text><text class="map-score" x="358" y="166">—</text></g>
+            <g class="district" data-district="Алматы" role="button" tabindex="0" aria-label="Район Алматы" aria-pressed="false"><path d="M444 88 L556 116 L600 221 L553 337 L443 303 L417 241 L460 203 Z"/><text x="513" y="206">Алматы</text><text class="map-score" x="513" y="241">—</text></g>
+            <g class="district" data-district="Есиль" role="button" tabindex="0" aria-label="Район Есиль" aria-pressed="false"><path d="M96 254 L243 245 L289 296 L275 408 L148 425 L79 346 Z"/><text x="185" y="319">Есиль</text><text class="map-score" x="185" y="354">—</text></g>
+            <g class="district" data-district="Нура" role="button" tabindex="0" aria-label="Район Нура" aria-pressed="false"><path d="M257 243 L307 232 L407 251 L434 314 L541 349 L458 421 L289 410 L302 290 Z"/><text x="386" y="323">Нура</text><text class="map-score" x="386" y="358">—</text></g>
+            <g class="compass"><path d="M605 45 L605 78 M596 56 L605 45 L614 56"/><text x="605" y="34">С</text></g>
+          </svg>
+        </div>
+        <div id="district-picker" class="district-picker" aria-label="Выбрать район"></div>
+        <div class="map-legend"><span><i class="legend-low"></i> Ниже 50</span><span><i class="legend-mid"></i> 50–59,99</span><span><i class="legend-high"></i> От 60</span></div>
+        <p class="disclaimer">Схематическое расположение, не географические границы. Пять районов и синтетические показатели из задания.</p>
+      </section>
+      <section class="panel detail-panel" aria-labelledby="district-title">
+        <div class="section-heading"><div><p class="eyebrow">ПАСПОРТ РАЙОНА</p><h2 id="district-title">Нура</h2></div><span id="district-pop" class="pill">— населения</span></div>
+        <p id="district-profile" class="section-note"></p>
+        <div class="district-summary"><div><span>Оценка района</span><strong id="district-score">—</strong></div><span id="district-delta" class="delta"></span></div>
+        <div class="bar-legend"><span><i></i> До</span><span><i></i> После</span><span>Шкала 0–100 · больше — лучше</span></div>
+        <div id="indicators"></div>
+      </section>
+    </div>
+    <section class="panel decisions-panel" aria-labelledby="decisions-title">
+      <div class="section-heading"><div><p class="eyebrow">02 / ВЫБЕРИТЕ ИЗМЕНЕНИЯ</p><h2 id="decisions-title">Ваши пять решений</h2></div><div class="toolbar"><button id="example" class="button secondary" disabled>Загрузить пример</button><button id="reset" class="button quiet" disabled>Сбросить</button></div></div>
+      <p class="section-note">Выберите ровно пять уникальных мероприятий. Для районных мер укажите место реализации.</p>
+      <div id="measures" class="measures"></div>
+      <div class="action-bar"><div><strong id="selection-summary">Выбрано 0 из 5</strong><p id="selection-hint">Выберите мероприятия, чтобы рассчитать изменения.</p></div><button id="evaluate" class="button primary" disabled>Рассчитать сценарий <span aria-hidden="true">↗</span></button></div>
+      <div id="scenario-status" class="notice" role="status" aria-live="polite" hidden></div>
+    </section>
+    <footer><span>NEWBIE · Аким на 5 часов</span><span>Учебный симулятор · AI-объяснение будет добавлено следующим этапом</span></footer>
+  </main>
+</body>
+</html>
