@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Аким на 5 часов — карта решений</title>
   <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/conclusion.css">
   <script src="/app.js" defer></script>
 </head>
 <body>
@@ -58,6 +59,20 @@
       <div id="measures" class="measures"></div>
       <div class="action-bar"><div><strong id="selection-summary">Выбрано 0 из 5</strong><p id="selection-hint">Выберите мероприятия, чтобы рассчитать изменения.</p></div><button id="evaluate" class="button primary" disabled>Рассчитать сценарий <span aria-hidden="true">↗</span></button></div>
       <div id="scenario-status" class="notice" role="status" aria-live="polite" hidden></div>
+      <a id="report-link" class="report-link" href="#conclusion" hidden>Читать заключение о последствиях ↓</a>
+    </section>
+    <section id="conclusion" class="panel conclusion-panel" aria-labelledby="conclusion-title" hidden>
+      <div class="section-heading"><div><p class="eyebrow">03 / ПОСЛЕДСТВИЯ РЕШЕНИЙ</p><h2 id="conclusion-title">Что изменят ваши решения</h2></div><span class="pill">По данным модели</span></div>
+      <p id="conclusion-summary" class="conclusion-summary"></p>
+      <p id="score-explanation" class="section-note"></p>
+      <p id="conclusion-model-note" class="report-note"></p>
+      <div class="conclusion-columns">
+        <section aria-labelledby="direction-title"><h3 id="direction-title">Что произошло по направлениям</h3><p class="section-note">Значения здесь — средние по городу с учётом доли населения районов.</p><div id="direction-conclusions"></div></section>
+        <section class="watchpoints" aria-labelledby="watchpoint-title"><h3 id="watchpoint-title">На что обратить внимание</h3><ul id="watchpoint-list"></ul><div id="resolved-critical"></div><div id="synergy-conclusions"></div></section>
+      </div>
+      <div class="conclusion-subheading"><h3>Каждое решение: эффект и реакция жителей</h3><p id="reaction-note" class="section-note"></p></div>
+      <div id="measure-conclusions" class="measure-conclusions"></div>
+      <p id="conclusion-method" class="disclaimer"></p>
     </section>
     <footer><span>NEWBIE · Аким на 5 часов</span><span>Учебный симулятор · AI-объяснение будет добавлено следующим этапом</span></footer>
   </main>

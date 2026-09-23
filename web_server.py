@@ -6,11 +6,13 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from simulator import baseline, evaluate, load_data
+from conclusions import build_conclusion
 
 ROOT = Path(__file__).resolve().parent
 STATIC = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/app.css": ("app.css", "text/css; charset=utf-8"),
+    "/conclusion.css": ("conclusion.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
 }
 
@@ -62,6 +64,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json({"error": "Не удалось прочитать JSON."}, 400)
             return
         result = evaluate(decisions)
+        if result["valid"]:
+            result["conclusion"] = build_conclusion(decisions, result)
         self.send_json(result, 200 if result["valid"] else 422)
 
 

@@ -16,7 +16,7 @@ const fmt = (n) => n.toLocaleString('ru-RU',{maximumFractionDigits:2});
 function element(tag, className, text) { const node=document.createElement(tag); if(className)node.className=className; if(text!==undefined)node.textContent=text; return node; }
 function current() { return view === 'after' && result ? result : initial; }
 function status(message, error=false) { $('scenario-status').textContent=message; $('scenario-status').classList.toggle('error',error); $('scenario-status').hidden=!message; }
-function invalidate() { revision++; result=null; view='before'; status(''); renderSummary(); renderMap(); renderDistrict(); }
+function invalidate() { revision++; result=null; view='before'; status(''); renderSummary(); renderMap(); renderDistrict(); renderConclusion(); }
 function renderSummary() {
   const cost=data.measures.filter(m=>choices.has(m.id)).reduce((sum,m)=>sum+m.cost,0);
   const state=current();
@@ -103,9 +103,41 @@ async function calculate() {
     const payload=await response.json();
     if(requestRevision!==revision)return;
     if(!response.ok||!payload.valid){result=null;view='before';status((payload.errors||[payload.error||'Не удалось рассчитать сценарий.']).join('\n'),true);}
-    else {result=payload;view='after';status(`Сценарий рассчитан. Балл города: ${fmt(result.score)} (${result.score_change>=0?'+':''}${fmt(result.score_change)}). Остаток бюджета: ${result.remaining_budget}.\nНа карте и в карточке района показан результат после мероприятий. Это численный расчёт, а не AI-анализ.`);}
-  } catch(error) {if(requestRevision===revision)status('Нет связи с расчётным сервером. Убедитесь, что web_server.py запущен, и повторите попытку.',true);}
-  finally {pending=false;renderSummary();renderMap();renderDistrict();}
+    else {result=payload;view='after';status(`Сценарий рассчитан. Балл города: ${fmt(result.score)} (${result.score_change>=0?'+':''}${fmt(result.score_change)}). Остаток бюджета: ${result.remaining_budget}.\nНиже — заключение с последствиями каждого решения и возможной реакцией жителей.`);}
+  } catch(error) {if(requestRevision===revision){result=null;view='before';status('Нет связи с расчётным сервером. Убедитесь, что web_server.py запущен, и повторите попытку.',true);}}
+  finally {pending=false;renderSummary();renderMap();renderDistrict();renderConclusion();}
+}
+function renderConclusion() {
+  const report=result?.conclusion;
+  $('conclusion').hidden=!report;
+  $('report-link').hidden=!report;
+  for(const id of ['direction-conclusions','watchpoint-list','resolved-critical','synergy-conclusions','measure-conclusions'])$(id).replaceChildren();
+  if(!report)return;
+  $('conclusion-summary').textContent=report.summary;
+  $('score-explanation').textContent=report.score_explanation;
+  $('conclusion-model-note').textContent=report.model_note;
+  $('reaction-note').textContent=report.reaction_note;
+  $('conclusion-method').textContent=report.method_note;
+  report.directions.forEach(direction=>{
+    const card=element('article','direction-conclusion'), heading=element('div','report-row');
+    heading.append(element('h4','',direction.title),element('span','pill',`Бюджет: ${direction.spent}`));
+    card.append(heading,element('p','',direction.text));$('direction-conclusions').append(card);
+  });
+  report.watchpoints.forEach(text=>$('watchpoint-list').append(element('li','',text)));
+  if(report.resolved_critical.length){$('resolved-critical').append(element('h4','','Вышли из критической зоны'));report.resolved_critical.forEach(text=>$('resolved-critical').append(element('p','',text)));}
+  if(report.synergies.length){$('synergy-conclusions').append(element('h4','','Сработали совместные эффекты'));report.synergies.forEach(item=>$('synergy-conclusions').append(element('p','',item.text)));}
+  report.measures.forEach(measure=>{
+    const card=element('article','measure-conclusion');
+    card.append(element('p','eyebrow',`${measure.id} / ${measure.scope} / ${measure.cost} усл. ед.`),element('h4','',measure.name));
+    const facts=element('div','measure-facts');facts.append(element('strong','','Эффект по датасету'));
+    facts.append(element('p','',measure.effects.map(effect=>`${effect.label}: ${effect.delta>0?'+':''}${fmt(effect.delta)}`).join(' · ')));
+    facts.append(element('p','timing',measure.timing));
+    facts.append(element('p','effect-note','Изменение от этой меры в каждом затронутом районе, до ограничения 0–100. Бонусы сочетаний указаны отдельно.'));
+    card.append(facts,element('p','mechanism',measure.mechanism));
+    const support=element('div','reaction support');support.append(element('h5','','Кто может поддержать'),element('p','',measure.possible_support));
+    const concerns=element('div','reaction concern');concerns.append(element('h5','','Кто может быть недоволен и почему'),element('p','',measure.possible_concerns));
+    card.append(support,concerns);$('measure-conclusions').append(card);
+  });
 }
 async function init() {
   try {

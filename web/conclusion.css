@@ -1,0 +1,37 @@
+.report-link { display:inline-block; margin-top:17px; color:var(--green); font-size:13px; text-underline-offset:4px; }
+.conclusion-panel { margin-top:24px; scroll-margin-top:24px; }
+.conclusion-summary { font-size:18px; line-height:1.65; max-width:940px; margin:23px 0 12px; }
+.report-note { background:#f0f3ea; border-left:3px solid #86a382; padding:12px 16px; font-size:12px; color:var(--muted); line-height:1.7; }
+.conclusion-columns { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:28px; margin-top:28px; }
+.conclusion-panel h3 { font-size:17px; font-weight:600; margin:0 0 12px; }
+.conclusion-panel h4 { font-size:14px; font-weight:600; margin:0; }
+.report-row { display:flex; gap:12px; align-items:center; justify-content:space-between; }
+.direction-conclusion { border-bottom:1px solid var(--line); padding:15px 0; }
+.direction-conclusion:first-child { padding-top:0; }
+.direction-conclusion p, .watchpoints p, .watchpoints li { font-size:12px; line-height:1.85; color:#52665a; }
+.direction-conclusion p { margin:9px 0 0; }
+.watchpoints { background:#f4f3e9; padding:22px; border-radius:10px; align-self:start; }
+.watchpoints ul { margin:0; padding-left:17px; }
+.watchpoints li { margin-bottom:14px; }
+.watchpoints h4 { margin:20px 0 7px; }
+.watchpoints p { margin:5px 0; }
+.conclusion-subheading { margin-top:32px; border-top:1px solid var(--line); padding-top:25px; }
+.conclusion-subheading .section-note { max-width:920px; }
+.measure-conclusions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:20px 0; }
+.measure-conclusion { border:1px solid var(--line); border-radius:11px; padding:22px; }
+.measure-conclusion h4 { font-size:17px; line-height:1.5; margin-bottom:15px; }
+.measure-facts { background:#edf3e9; border-radius:7px; padding:13px 15px; }
+.measure-facts strong { font-size:11px; color:var(--green); }
+.measure-facts p { font-size:12px; line-height:1.7; margin:6px 0; }
+.measure-facts .timing, .measure-facts .effect-note { font-size:10px; color:var(--muted); }
+.mechanism { font-size:12px; line-height:1.85; margin:16px 0; }
+.reaction { padding:12px 0 12px 13px; border-left:2px solid #90aa83; margin-top:12px; }
+.reaction.concern { border-color:#c8986e; }
+.reaction h5 { font-size:11px; margin:0 0 6px; font-weight:700; }
+.reaction p { font-size:12px; line-height:1.8; color:var(--muted); margin:0; }
+@media(max-width:900px) {
+  .conclusion-columns, .measure-conclusions { grid-template-columns:1fr; }
+  .conclusion-columns { gap:22px; }
+  .conclusion-summary { font-size:16px; }
+  .measure-conclusion { padding:17px; }
+}

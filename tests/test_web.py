@@ -35,7 +35,7 @@ class WebTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(len(payload["data"]["districts"]), 5)
         self.assertEqual(payload["baseline"]["critical_count"], 2)
-        for path in ["/", "/app.css", "/app.js"]:
+        for path in ["/", "/app.css", "/conclusion.css", "/app.js"]:
             self.assertEqual(self.request("GET", path)[0], 200)
 
     def test_calculate_and_reject_invalid(self):
@@ -44,9 +44,11 @@ class WebTests(unittest.TestCase):
         status, content = self.request("POST", "/api/evaluate", example, headers)
         self.assertEqual(status, 200)
         self.assertAlmostEqual(json.loads(content)["score"], 56.54307)
+        self.assertEqual(len(json.loads(content)["conclusion"]["measures"]), 5)
         status, content = self.request("POST", "/api/evaluate", b"[]", headers)
         self.assertEqual(status, 422)
         self.assertIsNone(json.loads(content)["score"])
+        self.assertNotIn("conclusion", json.loads(content))
 
     def test_bad_json_and_cross_origin(self):
         status, _ = self.request("POST", "/api/evaluate", b"{", {"Content-Type":"application/json"})
